@@ -30,7 +30,7 @@ def get_text_chunks(text):
 
 def get_vectorestore(text_chunks):
     embeddings = HuggingFaceInstructEmbeddings()
-    vectorestore = faiss.from_texts(texts = text_chunks, embeddings = embeddings)
+    vectorestore = faiss.FAISS.from_texts(texts = text_chunks, embedding = embeddings)
     return vectorestore
 
 def main():
