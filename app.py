@@ -35,3 +35,6 @@ def main():
                 raw_text = get_pdf_text(pdf_docs)
                 st.write(raw_text)
                 
+
+if __name__ == '__main__':
+    main()
