@@ -2,6 +2,8 @@ import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import HuggingFaceInstructEmbeddings
+from langchain.vectorstores import faiss
 
 # Function to read from pdfs and extract the text
 def get_pdf_text(pdf_docs):
@@ -26,6 +28,11 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
+def get_vectorestore(text_chunks):
+    embeddings = HuggingFaceInstructEmbeddings()
+    vectorestore = faiss.from_texts(texts = text_chunks, embeddings = embeddings)
+    return vectorestore
+
 def main():
     load_dotenv()
     # Title for the application
@@ -48,8 +55,9 @@ def main():
                 
                 # get the text chunks
                 text_chunks = get_text_chunks(raw_text)
-                st.write(text_chunks)
                 
+                # turn it into a vectorstore
+                get_vectorestore(text_chunks)
 
 if __name__ == '__main__':
     main()
