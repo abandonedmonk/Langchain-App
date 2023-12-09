@@ -24,3 +24,14 @@ def main():
     
     # The sidebar with text, button and upload option
     with st.sidebar:
+        st.subheader("Your documents")
+        
+        pdf_docs = st.file_uploader(
+            "Upload your PDF", accept_multiple_files=True)
+        if st.button("Process"):
+            # spinner to make it user friendly
+            with st.spinner("Processing"):
+                # get pdf text
+                raw_text = get_pdf_text(pdf_docs)
+                st.write(raw_text)
+                
