@@ -15,10 +15,10 @@ def get_pdf_text(pdf_docs):
     for pdf in pdf_docs:
         # Reading each PDF
         pdf_reader = PdfReader(pdf)
-        
         # Extracting text from each page
         for page in pdf_reader.pages:
             text += page.extract_text()
+            
     return text
 
 # Dividing the text in different chunks (groups)
@@ -34,13 +34,16 @@ def get_text_chunks(text):
 
 # converting the text chunks into embeddings and storing inside vectore database
 def get_vectorestore(text_chunks):
-    embeddings = HuggingFaceInstructEmbeddings()
+    embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
     vectorestore = faiss.FAISS.from_texts(texts = text_chunks, embedding = embeddings)
     return vectorestore
 
 def get_conversation_chain(vectorestore):
-    llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
-    memory = ConversationBufferMemory(memory_key='chat_history', return_messages='True')
+    llm = HuggingFaceHub(repo_id="bigscience/bloom", model_kwargs={"temperature":0.5, "max_length":512})
+    memory = ConversationBufferMemory(
+        memory_key='chat_history', 
+        return_messages=True
+        )
     converstion_chain = ConversationalRetrievalChain.from_llm(
         llm = llm,
         retriever= vectorestore.as_retriever(),
@@ -81,10 +84,7 @@ def main():
     
     if user_question:
         handle_userinput(user_question)
-    
-    st.write(user_template.replace("{{MSG}}", "Hello Bot!"), unsafe_allow_html=True)
-    st.write(bot_template.replace("{{MSG}}", "Hello!"), unsafe_allow_html=True)
-    
+
     # The sidebar with text, button and upload option
     with st.sidebar:
         st.subheader("Your documents")
@@ -104,9 +104,8 @@ def main():
                 vectorestore = get_vectorestore(text_chunks)
                 
                 # create converstion chain
-                st.session_state.converstion = get_conversation_chain(vectorestore)
+                st.session_state.conversation = get_conversation_chain(vectorestore)
 
-    
 
 if __name__ == '__main__':
     main()
