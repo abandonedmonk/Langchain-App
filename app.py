@@ -52,6 +52,13 @@ def main():
     # Title for the application
     st.set_page_config(page_title="Chat with Conference Papers", page_icon=":newspaper:")
     
+    # to make it persistent
+    # since streamlit reinitializes the 
+    
+    # initializing session_state
+    if "conversation" not in st.session_state:
+        st.session_state.conversation = None  
+    
     st.header("Chat with Conference Papers :newspaper:")
     st.text_input("Ask Question about your document: ")
     
@@ -74,7 +81,10 @@ def main():
                 vectorestore = get_vectorestore(text_chunks)
                 
                 # create converstion chain
-                converstion = get_conversation_chain(vectorestore)
+                st.session_state.converstion = get_conversation_chain(vectorestore)
+
+    st.session_state.converstion
+    
 
 if __name__ == '__main__':
     main()
