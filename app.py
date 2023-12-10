@@ -4,6 +4,9 @@ from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.vectorstores import faiss
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
+from langchain.chat_models import ChatOpenAI
 
 # Function to read from pdfs and extract the text
 def get_pdf_text(pdf_docs):
@@ -28,10 +31,21 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
+# converting the text chunks into embeddings and storing inside vectore database
 def get_vectorestore(text_chunks):
     embeddings = HuggingFaceInstructEmbeddings()
     vectorestore = faiss.FAISS.from_texts(texts = text_chunks, embedding = embeddings)
     return vectorestore
+
+def get_conversation_chain(vectorestore):
+    llm = ChatOpenAI()
+    memory = ConversationBufferMemory(memory_key='chat_history', return_messages='True')
+    converstion_chain = ConversationalRetrievalChain.from_llm(
+        llm = llm,
+        retriever= vectorestore.as_retriever(),
+        memory = memory
+    )
+    return converstion_chain
 
 def main():
     load_dotenv()
@@ -57,7 +71,10 @@ def main():
                 text_chunks = get_text_chunks(raw_text)
                 
                 # turn it into a vectorstore
-                get_vectorestore(text_chunks)
+                vectorestore = get_vectorestore(text_chunks)
+                
+                # create converstion chain
+                converstion = get_conversation_chain(vectorestore)
 
 if __name__ == '__main__':
     main()
