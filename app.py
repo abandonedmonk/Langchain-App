@@ -7,6 +7,7 @@ from langchain.vectorstores import faiss
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
+from HTML_Templates import css, bot_template, user_template
 
 # Function to read from pdfs and extract the text
 def get_pdf_text(pdf_docs):
@@ -47,20 +48,40 @@ def get_conversation_chain(vectorestore):
     )
     return converstion_chain
 
+def handle_userinput(user_question):
+    response = st.session_state.conversation({'question': user_question})
+    st.session_state.chat_history = response['chat_history']
+    
+    for i, message in enumerate(st.session_state.chat_history):
+        if i % 2 == 0:
+            st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+        else:
+            st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+
 def main():
     load_dotenv()
     # Title for the application
     st.set_page_config(page_title="Chat with Conference Papers", page_icon=":newspaper:")
     
+    st.write(css, unsafe_allow_html=True)
+    
     # to make it persistent
     # since streamlit reinitializes the 
-    
     # initializing session_state
     if "conversation" not in st.session_state:
         st.session_state.conversation = None  
+        
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = None
     
     st.header("Chat with Conference Papers :newspaper:")
-    st.text_input("Ask Question about your document: ")
+    user_question = st.text_input("Ask Question about your document: ")
+    
+    if user_question:
+        handle_userinput(user_question)
+    
+    st.write(user_template.replace("{{MSG}}", "Hello Bot!"), unsafe_allow_html=True)
+    st.write(bot_template.replace("{{MSG}}", "Hello!"), unsafe_allow_html=True)
     
     # The sidebar with text, button and upload option
     with st.sidebar:
@@ -83,7 +104,6 @@ def main():
                 # create converstion chain
                 st.session_state.converstion = get_conversation_chain(vectorestore)
 
-    st.session_state.converstion
     
 
 if __name__ == '__main__':
